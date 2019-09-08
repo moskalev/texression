@@ -8,7 +8,7 @@ Created on Sat Mar 23 22:25:36 2019
 
 class texression():
     
-    def __init__(self, varnames = {}, varorder = [], maxrows = 100, head_legend = "", adjr2 = False, include_std = True, new_str_ex = 3, intertable_fill=""):
+    def __init__(self, varnames = {}, varorder = [], maxrows = 100, head_legend = "", adjr2 = False, include_std = True, new_str_ex = 3, intertable_fill="", longtable = False, ltcaption = "", ltlabel = "", ltcolwidth = 3, hide_r2fstat = False):
         self.results = []
         self.varnames = varnames
         self.varorder = varorder
@@ -18,6 +18,11 @@ class texression():
         self.include_std = include_std
         self._new_str_ex = new_str_ex
         self.intertable_fill = intertable_fill
+        self.longtable = longtable
+        self.ltcaption = ltcaption
+        self.ltlabel = ltlabel
+        self.ltcolwidth = ltcolwidth
+        self.hide_r2fstat = hide_r2fstat
         
     def add_regression(self, regression, depvar = ""):
         self.results.append({'r' : regression, 'depvar' : depvar})
@@ -33,29 +38,66 @@ class texression():
             
     def __gen_header__(self, false_header = False):
         tot_cols = len(self.results) + 1 # for variable names
-        res = "\\begin{tabular}{l" + "D{.}{.}{5}" * (tot_cols - 1) + "}\n"
-        if not false_header:
-            res += "\hline\hline\n"
-        res += ""
-        if (not false_header)&(self.head_legend != ""):
-            res += "\multicolumn{" + str(len(self.results) + 1) + "}{l}{" + self.head_legend + "} \\\ \n"
-        for i in range(1, tot_cols):
-            res += "& \multicolumn{1}{c}{(" + str(i) + ")}"
-        if false_header:
-            res += "\\\ \hdashline \n"
+        
+        if self.longtable: # Define the tabular/longtable environment
+            res = "\\newcommand{\mc}[2]{\multicolumn{1}{>{\\raggedright\\arraybackslash}p{#1}}{#2}}\n\LTcapwidth=\\textwidth\n\n"
+            res += "\\begin{longtable}{l" + "D{.}{.}{5.6}" * (tot_cols - 1) + "}\n"
+            res += "\caption{" + self.ltcaption + "}\n"
+            res += "\label{" + self.ltlabel + "} \\\ \n"
+            
         else:
-            # gather all variables:
+            res = "\\begin{tabular}{l" + "D{.}{.}{5}" * (tot_cols - 1) + "}\n"
+        
+        # Generate header
+        if self.longtable:
+            #res += "\\toprule\n"
+            res += "\hline\hline\n"
             allvar = list(set([x['depvar'] for x in self.results]))
             if len(allvar) > 1: # need to display these
-                res += "\\\ \n"
+                res += "\n"
                 for i in range(1, tot_cols):
-                    res += "& \multicolumn{1}{c}{" + self.__get_varname__(self.results[i - 1]['depvar']) + "}"
-            res += "\\\ \hline \n"
-        
+                    res += "& \mc{" + str(self.ltcolwidth) + "cm}{" + self.__get_varname__(self.results[i - 1]['depvar']) + "}\n"
+            #res += "\midrule\n" 
+            res += "\\\ \n"
+            for i in range(1, tot_cols):
+                res += "& \multicolumn{1}{c}{{\it(" + str(i) + ")}}"
+            res += "\\\ \hline\n\endfirsthead\n"
+            
+        else:
+            if not false_header:
+                res += "\hline\hline\n"
+
+            res += ""
+            if (not false_header)&(self.head_legend != ""):
+                res += "\multicolumn{" + str(len(self.results) + 1) + "}{l}{" + self.head_legend + "} \\\ \n"
+            for i in range(1, tot_cols):
+                res += "& \multicolumn{1}{c}{(" + str(i) + ")}"
+            if false_header:
+                #res += "\\\ \hdashline \n" # does not work well with longtable
+                res += "\\\ \hline \n"
+            else:
+                # gather all variables:
+                allvar = list(set([x['depvar'] for x in self.results]))
+                if len(allvar) > 1: # need to display these
+                    res += "\\\ \n"
+                    for i in range(1, tot_cols):
+                        res += "& \multicolumn{1}{c}{" + self.__get_varname__(self.results[i - 1]['depvar']) + "}"
+                res += "\\\ \hline \n"
+            
+        if self.longtable: # since we have a longtable we need to generate secondary header and footer
+            res += "\multicolumn{" + str(tot_cols) + "}{l}{Table \\ref{" + self.ltlabel + "}, continued} \\\ \n"
+            for i in range(1, tot_cols):
+                res += "& \multicolumn{1}{c}{{\it(" + str(i) + ")}}"
+            res += "\n\n\endhead\n\n\endfoot\n\n"
+    
         return res
     
     def __get_false_footer(self):
-        res = "\hdashline\n\end{tabular}\n"
+        #res = "\hdashline\n\end{tabular}\n"
+        if self.longtable:
+            res = "\hline\n\end{longtable}\n"
+        else:
+            res = "\hline\n\end{tabular}\n"
         res += self.intertable_fill + "\n"
         return res
         
@@ -66,13 +108,14 @@ class texression():
             res += "& \multicolumn{1}{c}{" + "{0:.0f}".format(r['r'].nobs) + "} "
         res += "\\\ \n"
         
-        res += "$R^2$ "
-        for r in self.results:
-            if 'rsquared' in dir(r['r']):
-                res += "& \multicolumn{1}{c}{" + "{0:.3f}".format(r['r'].rsquared) + "} "
-            else:
-                res += " & "
-        res += "\\\ \n"
+        if self.hide_r2fstat == False:
+            res += "$R^2$ "
+            for r in self.results:
+                if 'rsquared' in dir(r['r']):
+                    res += "& \multicolumn{1}{c}{" + "{0:.3f}".format(r['r'].rsquared) + "} "
+                else:
+                    res += " & "
+            res += "\\\ \n"
         
         if self.adjr2:
             res += "Adj. $R^2$ "
@@ -83,19 +126,24 @@ class texression():
                     res += " & "
             res += "\\\ \n"
         
-        res += "F stat. "
-        for r in self.results:
-            res += " & "
-            if 'fvalue' in dir(r['r']):
-                res += "\multicolumn{1}{c}{" + "{0:.1f}".format(r['r'].fvalue[0][0]) + "} "
-            if 'f_statistic' in dir(r['r']):
-                res += "\multicolumn{1}{c}{" + "{0:.1f}".format(r['r'].f_statistic.stat) + "} "
-                
-        res += "\\\ \n"
+        if self.hide_r2fstat == False:
+            res += "F stat. "
+            for r in self.results:
+                res += " & "
+                if 'fvalue' in dir(r['r']):
+                    res += "\multicolumn{1}{c}{" + "{0:.1f}".format(r['r'].fvalue[0][0]) + "} "
+                if 'f_statistic' in dir(r['r']):
+                    res += "\multicolumn{1}{c}{" + "{0:.1f}".format(r['r'].f_statistic.stat) + "} "
+                    
+            res += "\\\ \n"
         
         
         res += "\hline\hline\n"
-        res += "\multicolumn{" + str(len(self.results) + 1) + "}{r}{$^*p < 0.1$; $^{**}p < 0.05$; $^{***}p < 0.01$}\n\end{tabular}\n"
+        res += "\multicolumn{" + str(len(self.results) + 1) + "}{r}{$^*p < 0.1$; $^{**}p < 0.05$; $^{***}p < 0.01$}\n"
+        if self.longtable:
+            res += "\end{longtable}\n"
+        else:
+            res += "\end{tabular}\n"
         return res
     
     def __get_silent_vars__(self):
@@ -138,7 +186,7 @@ class texression():
                 return res
             if v['type'] == 'separator': # we are working with a controls group
                 res = '\multicolumn{' + str(len(self.results) + 1) + '}{l}{\\text{' + self.__get_varname__(v) + '}}'
-                res += " \\\ \n"
+                res += " \\\* \n" # after a separator we do not want to break the table in longtable
                 return res
                 
             return str(res + ' <Error in texression>')
@@ -156,9 +204,10 @@ class texression():
                 if r['r'].pvalues[v] <= 0.01:
                     res += "*"
                 res += "}"
-        res += " \\\ \n"
+        
         
         if self.include_std: # include standard errors
+            res += " \\\* \n"
             for r in self.results:
                 se = None
                 if 'bse' in dir(r['r']):
@@ -168,7 +217,7 @@ class texression():
                 res += " & "
                 if v in se.index:
                     res += "({0:.3f})".format(se[v])
-            res += " \\\ \n"
+        res += " \\\ \n"
         return res
         
     def __get_table_data_(self):
