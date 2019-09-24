@@ -40,7 +40,8 @@ class texression():
         tot_cols = len(self.results) + 1 # for variable names
         
         if self.longtable: # Define the tabular/longtable environment
-            res = "\\newcommand{\mc}[2]{\multicolumn{1}{>{\\raggedright\\arraybackslash}p{#1}}{#2}}\n\LTcapwidth=\\textwidth\n\n"
+            #res = "\\newcommand{\mc}[2]{\multicolumn{1}{>{\\raggedright\\arraybackslash}p{#1}}{#2}}\n\LTcapwidth=\\textwidth\n\n"
+            res = "\LTcapwidth=\\textwidth\n\n" # mt command needs to be defined somewhere else
             res += "\\begin{longtable}{l" + "D{.}{.}{5.6}" * (tot_cols - 1) + "}\n"
             res += "\caption{" + self.ltcaption + "}\n"
             res += "\label{" + self.ltlabel + "} \\\ \n"
