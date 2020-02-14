@@ -27,7 +27,7 @@ class texression():
     def add_regression(self, regression, depvar = ""):
         self.results.append({'r' : regression, 'depvar' : depvar})
         
-    def __get_varname__(self, v):
+    def __get_varname(self, v):
         if type(v) == dict:
             v = v['name']
         if v in self.varnames.keys():
@@ -36,7 +36,7 @@ class texression():
             res = v.replace('_', '\_')
         return res
             
-    def __gen_header__(self, false_header = False):
+    def __gen_header(self, false_header = False):
         tot_cols = len(self.results) + 1 # for variable names
         
         if self.longtable: # Define the tabular/longtable environment
@@ -57,7 +57,7 @@ class texression():
             if len(allvar) > 1: # need to display these
                 res += "\n"
                 for i in range(1, tot_cols):
-                    res += "& \mc{" + str(self.ltcolwidth) + "cm}{" + self.__get_varname__(self.results[i - 1]['depvar']) + "}\n"
+                    res += "& \mc{" + str(self.ltcolwidth) + "cm}{" + self.__get_varname(self.results[i - 1]['depvar']) + "}\n"
             #res += "\midrule\n" 
             res += "\\\ \n"
             for i in range(1, tot_cols):
@@ -82,7 +82,7 @@ class texression():
                 if len(allvar) > 1: # need to display these
                     res += "\\\ \n"
                     for i in range(1, tot_cols):
-                        res += "& \multicolumn{1}{c}{" + self.__get_varname__(self.results[i - 1]['depvar']) + "}"
+                        res += "& \multicolumn{1}{c}{" + self.__get_varname(self.results[i - 1]['depvar']) + "}"
                 res += "\\\ \hline \n"
             
         if self.longtable: # since we have a longtable we need to generate secondary header and footer
@@ -102,7 +102,7 @@ class texression():
         res += self.intertable_fill + "\n"
         return res
         
-    def __get_footer__(self):
+    def __get_footer(self):
         res = "\hline\n"
         res += "Observations "
         for r in self.results:
@@ -132,7 +132,8 @@ class texression():
             for r in self.results:
                 res += " & "
                 if 'fvalue' in dir(r['r']):
-                    res += "\multicolumn{1}{c}{" + "{0:.1f}".format(r['r'].fvalue[0][0]) + "} "
+                    if r['r'].fvalue == r['r'].fvalue:
+                        res += "\multicolumn{1}{c}{" + "{0:.1f}".format(r['r'].fvalue[0][0]) + "} "
                 if 'f_statistic' in dir(r['r']):
                     res += "\multicolumn{1}{c}{" + "{0:.1f}".format(r['r'].f_statistic.stat) + "} "
                     
@@ -147,7 +148,7 @@ class texression():
             res += "\end{tabular}\n"
         return res
     
-    def __get_silent_vars__(self):
+    def __get_silent_vars(self):
         res = []
         for v in self.varorder:
             if type(v) == dict:
@@ -155,16 +156,19 @@ class texression():
                     res += v['vars']
         return res
         
-    def __get_varorder__(self):
+    def __get_varorder(self):
         all_vars = []
         for r in self.results:
             all_vars += list(r['r'].params.index)
         hashable_vars = [x for x in self.varorder if type(x) == str] # we need to exclude any dicts from here first
-        all_vars = list(set(all_vars) - set(hashable_vars) - set(self.__get_silent_vars__()) - set(['const']))
+        all_vars = list(set(all_vars) - set(hashable_vars) - set(self.__get_silent_vars()) - set(['const']))
         if 'const' in self.varorder:
             return self.varorder + all_vars
         else:
-            return self.varorder + all_vars + ['const']
+            if 'const' in set(self.__get_silent_vars()):
+                return self.varorder + all_vars
+            else:
+                return self.varorder + all_vars + ['const']
     
     def __get_table_string(self, v):
         res = "\\rule{0pt}{" + str(self._new_str_ex) + "ex} "
@@ -176,7 +180,7 @@ class texression():
         
         if type(v) == dict: # for dict variables we need to use special rules as these contain groups of regression variables
             if v['type'] == 'controls': # we are working with a controls group
-                res += self.__get_varname__(v)
+                res += self.__get_varname(v)
                 for r in self.results:
                     res += " & "
                     if set(v['vars']).issubset(set(r['r'].params.index)):
@@ -185,14 +189,19 @@ class texression():
                         res += 'No'
                 res += " \\\ \n"
                 return res
+            
+            if v['type'] == 'silent': # silence some variables as they make no sense (like an empty constant)
+                res = ""
+                return res
+            
             if v['type'] == 'separator': # we are working with a controls group
-                res = '\multicolumn{' + str(len(self.results) + 1) + '}{l}{\\text{' + self.__get_varname__(v) + '}}'
+                res = '\multicolumn{' + str(len(self.results) + 1) + '}{l}{\\text{' + self.__get_varname(v) + '}}'
                 res += " \\\* \n" # after a separator we do not want to break the table in longtable
                 return res
                 
             return str(res + ' <Error in texression>')
         
-        res += self.__get_varname__(v)        
+        res += self.__get_varname(v)        
         
         for r in self.results:
             res += " & "
@@ -221,20 +230,20 @@ class texression():
         res += " \\\ \n"
         return res
         
-    def __get_table_data_(self):
-        varorder = self.__get_varorder__()
+    def __get_table_data(self):
+        varorder = self.__get_varorder()
         res = ""
         row_cnt = 0
         for v in varorder:
             if row_cnt >= self.maxrows:
-                res += self.__get_false_footer() + self.__gen_header__(false_header = True)
+                res += self.__get_false_footer() + self.__gen_header(false_header = True)
                 row_cnt = 0
             res += self.__get_table_string(v)
             row_cnt += 1
         return res
         
     def latex(self, file=""):
-        res = self.__gen_header__() + self.__get_table_data_() + self.__get_footer__()
+        res = self.__gen_header() + self.__get_table_data() + self.__get_footer()
         if file != "":
             f = open(file, 'w')
             f.write(res)

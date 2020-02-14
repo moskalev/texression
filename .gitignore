@@ -5,3 +5,4 @@ __pycache__/
 *.py[cod]
 regtable.tex
 old-git.tar.gz
+fig
