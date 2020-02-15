@@ -6,6 +6,7 @@ This class offers an easy way to transform Python regression output (linearmodel
     <img src="https://user-images.githubusercontent.com/1658661/74577125-aa89d780-4f5b-11ea-860a-9bd48c57af9d.png" width="50%">
 </p>
 
+
 ## Usage
 
 To use the class, create an instance of a class instance with table features, variables names, and variables order passed as parameters.
@@ -56,3 +57,16 @@ And then save the constructed LaTeX table to file with the `latex` method:
 ```python
 tx.latex('FSLS_presentation.tex') # saves LaTeX table to 'FSLS_presentation' file
 ```
+
+
+## Features
+
++ Multiple regressions per table
++ Ordering of variables and human readable variables' names
++ Ability to group sets of variables to save space (e.g. controls)
++ Ability to hide variables from being displayed (e.g. constant)
++ Centering of values displayed "by the dot"
++ Multi-page support
++ Table sectioning
+
+Examples are available in this [pdf](doc/example.pdf).
