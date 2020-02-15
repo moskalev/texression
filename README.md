@@ -2,7 +2,9 @@
 
 This class offers an easy way to transform Python regression output (linearmodels, statsmodels) into a LaTeX table. Moreover, it allows to combine multiple regression models into a unified table. An example table is presented below.
 
-<img src="https://user-images.githubusercontent.com/1658661/74577125-aa89d780-4f5b-11ea-860a-9bd48c57af9d.png" width="50%">
+<p align="center">
+    <img src="https://user-images.githubusercontent.com/1658661/74577125-aa89d780-4f5b-11ea-860a-9bd48c57af9d.png" width="50%">
+</p>
 
 ## Usage
 
@@ -37,4 +39,20 @@ varorder = ['t1', 't0', 'banded', 'banded_t1',
            {'type' : 'silent', 'vars' : ['const']}]
 ```
 
-The `varorder` parameter also allows to group variables (if complete group is present, then "Yes" is displayed) under an alternative caption; and to forcibly hide variables from being shown (if regression contains variable, not mentioned in `varnames`/`varorder` then it is still displayed in the table).
+The `varorder` parameter also allows to group variables (if complete group is present, then "Yes" is displayed) under an alternative caption; and to forcibly hide variables from being shown (if regression contains variable not mentioned in `varnames`/`varorder` then it is still displayed in the table).
+
+Once an class instance is created, it can absorb regression results with `add_regression` method:
+
+```python
+from linearmodels import OLS
+
+tx.add_regression(OLS(...).fit(), 'Similarity measure')
+tx.add_regression(OLS(...).fit(), '\% owned by index funds')
+
+```
+
+And then save the constructed LaTeX table to file with the `latex` method:
+
+```python
+tx.latex('FSLS_presentation.tex') # saves LaTeX table to 'FSLS_presentation' file
+```
