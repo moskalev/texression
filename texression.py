@@ -30,7 +30,10 @@ SOFTWARE.
 
 class texression():
     
-    def __init__(self, varnames = {}, varorder = [], maxrows = 100, head_legend = "", adjr2 = False, include_std = True, new_str_ex = 3, intertable_fill="", longtable = False, ltcaption = "", ltlabel = "", ltcolwidth = 3, hide_r2fstat = False):
+    def __init__(self, varnames = {}, varorder = [], maxrows = 100,
+                 head_legend = "", adjr2 = False, include_std = True,
+                 new_str_ex = 3, intertable_fill="", longtable = False,
+                 ltcaption = "", ltlabel = "", ltcolwidth = 3, hide_r2fstat = False):
         self.results = []
         self.varnames = varnames
         self.varorder = varorder
@@ -62,46 +65,38 @@ class texression():
         tot_cols = len(self.results) + 1 # for variable names
         
         if self.longtable: # Define the tabular/longtable environment
-            #res = "\\newcommand{\mc}[2]{\multicolumn{1}{>{\\raggedright\\arraybackslash}p{#1}}{#2}}\n\LTcapwidth=\\textwidth\n\n"
             res = "\LTcapwidth=\\textwidth\n\n" # mt command needs to be defined somewhere else
             res += "\\begin{longtable}{l" + "D{.}{.}{5.6}" * (tot_cols - 1) + "}\n"
             res += "\caption{" + self.ltcaption + "}\n"
             res += "\label{" + self.ltlabel + "} \\\ \n"
-            
         else:
             res = "\\begin{tabular}{l" + "D{.}{.}{5}" * (tot_cols - 1) + "}\n"
         
         # Generate header
         if self.longtable:
-            #res += "\\toprule\n"
             res += "\hline\hline\n"
             allvar = list(set([x['depvar'] for x in self.results]))
-            if len(allvar) > 1: # need to display these
+            if len(allvar) > 1: # need to display these variables
                 res += "\n"
                 for i in range(1, tot_cols):
                     res += "& \mc{" + str(self.ltcolwidth) + "cm}{" + self.__get_varname(self.results[i - 1]['depvar']) + "}\n"
-            #res += "\midrule\n" 
             res += "\\\ \n"
             for i in range(1, tot_cols):
                 res += "& \multicolumn{1}{c}{{\it(" + str(i) + ")}}"
             res += "\\\ \hline\n\endfirsthead\n"
-            
         else:
             if not false_header:
                 res += "\hline\hline\n"
-
-            res += ""
             if (not false_header)&(self.head_legend != ""):
                 res += "\multicolumn{" + str(len(self.results) + 1) + "}{l}{" + self.head_legend + "} \\\ \n"
             for i in range(1, tot_cols):
                 res += "& \multicolumn{1}{c}{(" + str(i) + ")}"
             if false_header:
-                #res += "\\\ \hdashline \n" # does not work well with longtable
                 res += "\\\ \hline \n"
             else:
                 # gather all variables:
                 allvar = list(set([x['depvar'] for x in self.results]))
-                if len(allvar) > 1: # need to display these
+                if len(allvar) > 1:
                     res += "\\\ \n"
                     for i in range(1, tot_cols):
                         res += "& \multicolumn{1}{c}{" + self.__get_varname(self.results[i - 1]['depvar']) + "}"
@@ -112,11 +107,9 @@ class texression():
             for i in range(1, tot_cols):
                 res += "& \multicolumn{1}{c}{{\it(" + str(i) + ")}}"
             res += "\n\n\endhead\n\n\endfoot\n\n"
-    
         return res
     
     def __get_false_footer(self):
-        #res = "\hdashline\n\end{tabular}\n"
         if self.longtable:
             res = "\hline\n\end{longtable}\n"
         else:
@@ -161,7 +154,6 @@ class texression():
                     
             res += "\\\ \n"
         
-        
         res += "\hline\hline\n"
         res += "\multicolumn{" + str(len(self.results) + 1) + "}{r}{$^*p < 0.1$; $^{**}p < 0.05$; $^{***}p < 0.01$}\n"
         if self.longtable:
@@ -194,14 +186,9 @@ class texression():
     
     def __get_table_string(self, v):
         res = "\\rule{0pt}{" + str(self._new_str_ex) + "ex} "
-#        if v in self.varnames.keys():
-#            res += str(self.varnames[v])
-#        else:
-#            res += v.replace('_', '\_')
         
-        
-        if type(v) == dict: # for dict variables we need to use special rules as these contain groups of regression variables
-            if v['type'] == 'controls': # we are working with a controls group
+        if type(v) == dict: # for dict variables we need to use special rules as these may contain groups of regression variables
+            if v['type'] == 'controls': # we are working with a group of controls
                 res += self.__get_varname(v)
                 for r in self.results:
                     res += " & "
@@ -237,7 +224,6 @@ class texression():
                     res += "*"
                 res += "}"
         
-        
         if self.include_std: # include standard errors
             res += " \\\* \n"
             for r in self.results:
@@ -267,8 +253,7 @@ class texression():
     def latex(self, file=""):
         res = self.__gen_header() + self.__get_table_data() + self.__get_footer()
         if file != "":
-            f = open(file, 'w')
-            f.write(res)
-            f.close()
+            with open(file, 'w') as f:
+                f.write(res)
         else:
             return res

@@ -55,7 +55,7 @@ tx.add_regression(OLS(...).fit(), '\% owned by index funds')
 And then save the constructed LaTeX table to file with the `latex` method:
 
 ```python
-tx.latex('FSLS_presentation.tex') # saves LaTeX table to 'FSLS_presentation' file
+tx.latex('FSLS_presentation.tex') # saves LaTeX table to 'FSLS_presentation.tex' file
 ```
 
 
