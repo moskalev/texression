@@ -203,7 +203,7 @@ class texression():
                 res = ""
                 return res
             
-            if v['type'] == 'separator': # we are working with a controls group
+            if v['type'] == 'separator':
                 res = '\multicolumn{' + str(len(self.results) + 1) + '}{l}{\\text{' + self.__get_varname(v) + '}}'
                 res += " \\\* \n" # after a separator we do not want to break the table in longtable
                 return res

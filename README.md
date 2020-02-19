@@ -9,7 +9,7 @@ This class offers an easy way to transform Python regression output (linearmodel
 
 ## Usage
 
-To use the class, create an instance of a class instance with table features, variables names, and variables order passed as [(parameters)](doc/parameters.md).
+To use the class, create an instance of a class instance with table features, variables names, and variables order passed as [parameters](doc/parameters.md).
 
 ```python
 import texression
