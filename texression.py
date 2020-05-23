@@ -215,7 +215,7 @@ class texression():
                     if set(v['vars']).issubset(set(r['r'].params.index)):
                         res += "\multicolumn{1}{c}{\\text{Yes}}"
                     else:
-                        res += "No"
+                        res += "\multicolumn{1}{c}{\\text{No}}"
                 res += " \\\ \n"
                 return res
             
