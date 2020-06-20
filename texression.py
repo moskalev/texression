@@ -28,7 +28,65 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. 
 """
 
+# Default regression result wrapper
+class regresult():
+    
+    def __init__(self, regression):
+        self.regression = regression
+        for attr in ['rsquared', 'rsquared_adj', 'fvalue', 'f_statistic']:
+            if attr in dir(regression):
+                self.setattr(self, attr, getattr(regression, attr))
+        
+    def __nobs(self):
+        return self.regression.nobs
+    
+    def __params(self):
+        return self.regression.params
+    
+    def __pvalues(self):
+        return self.regression.pvalues
+    
+    def __index(self):
+        return self.regression.index
+    
+    def __se(self):
+        if 'bse' in dir(self.regression):
+            se = self.regression.bse
+        if 'std_errors' in dir(self.regression):
+            se = self.regression.std_errors
+        return se
+    
+    nobs = property(__nobs)
+    params = property(__params)
+    pvalues = property(__pvalues)
+    index = property(__index)
+    se = property(__se)
 
+
+# Regression result wrapper for CoxTimeVarying from lifelines module
+class regCoxTimeVarying(regresult):
+    
+    def __init__(self, regression):
+        super(regCoxTimeVarying, self).__init__(regression)
+        
+    def __params(self):
+        return self.regression.params_
+    
+    def __pvalues(self):
+        return self.regression.summary['p']
+    
+    def __se(self):
+        return self.regression.standard_errors_
+    
+    def __nobs(self):
+        return self.regression.weights.sum()
+    
+    params = property(__params)
+    pvalues = property(__pvalues)
+    se = property(__se)
+    nobs = property(__nobs)
+
+    
 class texression():
     
     def __init__(self, varnames={}, varorder=[], maxrows=100, head_legend="",
@@ -51,6 +109,10 @@ class texression():
         self.hide_r2fstat = hide_r2fstat
         
     def add_regression(self, regression, depvar = ""):
+        if regression.__class__.__name__ == 'CoxTimeVaryingFitter':
+            regression = regCoxTimeVarying(regression)
+        else:
+            regression = regresult(regression)
         self.results.append({'r' : regression, 'depvar' : depvar})
         
     def __get_varname(self, v):
@@ -250,11 +312,7 @@ class texression():
         if self.include_std: # Include standard errors
             res += " \\\* \n"
             for r in self.results:
-                se = None
-                if 'bse' in dir(r['r']):
-                    se = r['r'].bse
-                if 'std_errors' in dir(r['r']):
-                    se = r['r'].std_errors
+                se = r['r'].se
                 res += " & "
                 if v in se.index:
                     res += "({0:.3f})".format(se[v])
