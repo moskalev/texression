@@ -2,23 +2,17 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Mar 23 22:25:36 2019
-
 @author: Alexandr Moskalev (moskalev@umich.edu)
-
 The MIT License (MIT)
-
 Copyright (c) 2020 Alexandr Moskalev
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,7 +29,7 @@ class regresult():
         self.regression = regression
         for attr in ['rsquared', 'rsquared_adj', 'fvalue', 'f_statistic']:
             if attr in dir(regression):
-                self.setattr(self, attr, getattr(regression, attr))
+                self.__setattr__(attr, getattr(regression, attr)) 
         
     def __nobs(self):
         return self.regression.nobs
@@ -224,7 +218,7 @@ class texression():
                 if 'fvalue' in dir(r['r']):
                     if r['r'].fvalue == r['r'].fvalue:
                         res += "\multicolumn{1}{c}{" \
-                        + "{0:.1f}".format(r['r'].fvalue[0][0]) + "} "
+                        + "{0:.1f}".format(r['r'].fvalue) + "} "
                 if 'f_statistic' in dir(r['r']):
                     res += "\multicolumn{1}{c}{" \
                     + "{0:.1f}".format(r['r'].f_statistic.stat) + "} "
@@ -300,14 +294,14 @@ class texression():
         for r in self.results:
             res += " & "
             if v in r['r'].params.index:
-                res += "{0:.3f}".format(r['r'].params[v]) + "^{"
+                res += "${0:.3f}".format(r['r'].params[v]) + "^{"
                 if r['r'].pvalues[v] <= 0.1:
                     res += "*"
                 if r['r'].pvalues[v] <= 0.05:
                     res += "*"
                 if r['r'].pvalues[v] <= 0.01:
                     res += "*"
-                res += "}"
+                res += "}$"
         
         if self.include_std: # Include standard errors
             res += " \\\* \n"
